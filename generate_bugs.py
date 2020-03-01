@@ -143,32 +143,63 @@ def find_closest_words(point, glove_vectors):
 
 
 
-## Only use once to get JSON
-def loadGloveVectors():
-    embeddings_dict = {}
-    with open("glove.42B.300d.txt", 'r') as f:
-        print("opened")
-        for line in f:
-            # if (count > 5):
-            #     break
-            values = line.split()
-            word = values[0]
-            vector = np.asarray(values[1:], "float32")
-            # print(vector)
-            vector = vector.tolist()
-            embeddings_dict[word] = vector
 
-            # count += 1
+
+generateBugs("happy")
+
+
+
+
+
+## Only use once to get JSON
+## Depracated
+# def loadGloveVectors():
+#     embeddings_dict = {}
+    
+#     # with open("glove.840B.300d.txt", 'r', encoding="utf8") as f:
+#     f = open(r"glove.840B.300d.txt", 'r', errors = 'ignore', encoding="utf8")
+
+#     print("opened")
+#     idx = 0
+#     for line in f:
+#         # if (count > 5):
+#         #     break
+#         values = line.split()
+#         word = values[0]
+#         vector = np.asarray(values[1:], "float32")
+
+#         # print(vector)
+#         vector = vector.tolist()
+#         embeddings_dict[word] = vector
+#         if (idx > 100):
+#             break
+#         # count += 1
 
     
-    with open('glove_vectors.json', 'w') as fp:
-        json.dump(embeddings_dict, fp)
+#     with open('glove_vectors.json', 'w') as fp:
+#         json.dump(embeddings_dict, fp)
 
+## This function works 
+# def loadGloveVectors():
+#     embedding_model = {}
+#     f = open(r'glove.840B.300d.txt', "r", encoding="utf8")
+#     idx = 0
+#     for line in f:
+#         values = line.split()
+#         word = ''.join(values[:-300])
+#         coefs = np.asarray(values[-300:], dtype='float32').tolist()
+#         embedding_model[word] = coefs
 
+#         idx += 1
+#     f.close()
+#     print("done")
+#     with open('glove_vectors.json', 'w') as fp:
+#         json.dump(embedding_model, fp)
 
+# loadGloveVectors()
+# generateBugs("and")
 
-generateBugs("lease") 
-
+# print(find_closest_words(glove_vectors[word], glove_vectors)[1:6])
 
 
 # Debugging purposes
@@ -178,3 +209,6 @@ generateBugs("lease")
     # print(bug_swap("carpet"))
     # print(bug_sub_C("lease"))
     # print(bug_sub_W("happy"))
+
+
+

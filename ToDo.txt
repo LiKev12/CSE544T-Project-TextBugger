@@ -1,0 +1,23 @@
+
+
+
+02/28/2020
+- Optimize generate_bugs.py to not take so long (maybe precompute the nearest neighbors for each word)
+- 3 Baseline algorithms
+    - Random
+    - FGSM + NNS
+    - DeepFool + NNS
+- 3 Targeted Models
+    - LR
+    - Kim's CNN (Paper 17)
+    - LSTM (Paper 38) **RY- Sentiment_Analysis/White_Box/Models
+- Get Datasets
+    - IMDB
+    - Rotten Tomatoes MR
+
+
+
+
+
+
+

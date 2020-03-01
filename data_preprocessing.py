@@ -8,6 +8,7 @@ import gensim
 from gensim.models.doc2vec import TaggedDocument
 from gensim.models.doc2vec import Doc2Vec
 import nltk
+nltk.download('punkt')
 
 
 file_path = "data/glove.840B.300d/"
@@ -38,34 +39,38 @@ def loadIMDBData():
     IMDB_text["train"]={}
     IMDB_text["train"]["pos"] = []
     IMDB_text["train"]["neg"] = []
+
     IMDB_text["val"] = {}
     IMDB_text["val"]["pos"] = []
     IMDB_text["val"]["neg"] = []
+
     IMDB_text["test"] = {}
     IMDB_text["test"]["pos"] = []
     IMDB_text["test"]["neg"] = []
 
+    # base_path = "dataset_imdb"
     base_path = "data/IMDB"
     sets = ["train","test"]
     labels = ["pos","neg"]
 
-    for set in sets:
+    for dataset in sets:
         for label in labels:
             i = 0
-            src_path = os.path.join(base_path, set, label)
+            src_path = os.path.join(base_path, dataset, label)
+            print(src_path)
             files = os.listdir(src_path)
             for file in files:
                 if not os.path.isdir(file):
                     f = smart_open.open(os.path.join(src_path, file),'r',encoding='utf-8')
                     tokens = nltk.word_tokenize(f.readlines()[0])
-                    IMDB_text[set][label].append(tokens)
-                    # for i,line in enumerate(f):
-                    #     tokens = gensim.utils.simple_preprocess(f.readlines)
-                        # if set=="train":
-                        #     # taggedDocument assign an unique id for each document
-                        #     IMDB_text[set][label].append(TaggedDocument(tokens,[i]))
-                        # else:
-                        #     IMDB_text[set][label].append(tokens)
+                    IMDB_text[dataset][label].append(tokens)
+                    for i,line in enumerate(f):
+                        tokens = gensim.utils.simple_preprocess(f.readlines)
+                        if set=="train":
+                            # taggedDocument assign an unique id for each document
+                            IMDB_text[set][label].append(TaggedDocument(tokens,[i]))
+                        else:
+                            IMDB_text[set][label].append(tokens)
 
 
     for label in labels:
