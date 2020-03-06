@@ -1,4 +1,3 @@
 glove_vectors.json
-data/IMDB
-data/IMDB_text_tokenized.p
-data/IMDB_vectors.p
+data
+
