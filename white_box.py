@@ -10,12 +10,6 @@ import pprint
 from gensim.models import Word2Vec
 
 
-
-
-
-
-
-
 class WhiteBox():
 
     def __init__(self, X, y, F, epsilon): 

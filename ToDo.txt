@@ -1,5 +1,26 @@
 
 
+03/06/2020
+- RY:
+    > Choose 1 model, 1 attack
+    > If stuck, start on report
+    > 
+    >
+
+
+- KL:
+    > Jacobian => Whitebox Algo => Random
+    > Finish glove_imdb, glove_rt
+    > LSTM ? (Download python3.7)
+    > Clustering for fast similarity
+    >
+
+
+
+
+
+
+
 
 02/28/2020
 - Optimize generate_bugs.py to not take so long (maybe precompute the nearest neighbors for each word)

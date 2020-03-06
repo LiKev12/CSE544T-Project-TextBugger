@@ -25,9 +25,9 @@ def baseline_random(input_text):
         numWords += output[1]
         perturbed += output[2]
         
-    print(perturbed)    
-    print(numWords)
-    print(round(float(perturbed/numWords),3))
+    # print(perturbed)    
+    # print(numWords)
+    print(str(round(float(perturbed*100/numWords),1)) + "% perturbed")
 
     res = ".".join(lines)
     print(res)
