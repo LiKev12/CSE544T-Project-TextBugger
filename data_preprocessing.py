@@ -64,13 +64,13 @@ def loadIMDBData():
                     f = smart_open.open(os.path.join(src_path, file),'r',encoding='utf-8')
                     tokens = nltk.word_tokenize(f.readlines()[0])
                     IMDB_text[dataset][label].append(tokens)
-                    for i,line in enumerate(f):
-                        tokens = gensim.utils.simple_preprocess(f.readlines)
-                        if set=="train":
-                            # taggedDocument assign an unique id for each document
-                            IMDB_text[set][label].append(TaggedDocument(tokens,[i]))
-                        else:
-                            IMDB_text[set][label].append(tokens)
+                    # for i,line in enumerate(f):
+                    #     tokens = gensim.utils.simple_preprocess(f.readlines)
+                    #     if set=="train":
+                    #         # taggedDocument assign an unique id for each document
+                    #         IMDB_text[set][label].append(TaggedDocument(tokens,[i]))
+                    #     else:
+                    #         IMDB_text[set][label].append(tokens)
 
 
     for label in labels:
@@ -125,15 +125,40 @@ def getIMDBGlove():
 
 
 def loadMRData():
-    pass
+    MR_text = {}
+    MR_text["pos"] = []
+    MR_text["neg"] = []
+
+    base_path = "data/MR"
+    labels = ["pos", "neg"]
+
+    for label in labels:
+        i = 0
+        file = os.path.join(base_path, 'rt-polarity.'+label)
+        f = smart_open.open(file, 'r', encoding='latin-1')
+        for line in f.readlines():
+            tokens = nltk.word_tokenize(line)
+            MR_text[label].append(tokens)
+
+    with open('data/MR_text_tokenized.p', 'wb') as fp:
+        pickle.dump(MR_text, fp)
+
+def getMRData():
+    with open('data/MR_text_tokenized.p','rb') as fp:
+        data = pickle.load(fp)
+    print(data["pos"])
 
 
 if __name__=="__main__":
-    ## Only use once to get JSON
+    # Only use once to get JSON
     #loadGloveVectors()
 
-    # transform IMDB data into numpy array
-    loadIMDBData()
+    # transform tokenized IMDB and MR data into numpy array
+    #loadIMDBData()
+    loadMRData()
+
+    # read data from pickle
+    getMRData()
 
     # convert data to vectors
     #getIMDBDoc2Vec()
