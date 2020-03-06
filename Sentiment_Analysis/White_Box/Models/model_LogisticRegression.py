@@ -127,7 +127,8 @@ class Logistic_Regression():
     
 if __name__ == "__main__":
     logreg = Logistic_Regression()
-    X_train, X_val, y_train, y_val = logreg.load_data()
+    # X_train, X_val, y_train, y_val = logreg.load_data()
+    X_train, X_val, y_train, y_val = logreg.load_data_RT()
     model = logreg.train(X_train, y_train)
     logreg.test(model, X_val, y_val)
 
