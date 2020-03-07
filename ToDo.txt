@@ -13,7 +13,7 @@
     > Finish glove_imdb, glove_rt
     > LSTM ? (Download python3.7)
     > Clustering for fast similarity
-    >
+    > 
 
 
 
