@@ -14,7 +14,7 @@ import json
 
 
 
-def generateBugs(word):
+def generateBugs(word, glove_vectors):
 
     bugs = {"insert": word, "delete": word, "swap": word, "sub_C": word, "sub_W": word}
 
@@ -25,9 +25,9 @@ def generateBugs(word):
     bugs["delete"] = bug_delete(word)
     bugs["swap"] = bug_swap(word)
     bugs["sub_C"] = bug_sub_C(word)
-    bugs["sub_W"] = bug_sub_W(word)
+    bugs["sub_W"] = bug_sub_W(word, glove_vectors)
 
-    pprint.pprint(bugs)
+    # pprint.pprint(bugs)
 
     return bugs
 
@@ -72,40 +72,24 @@ def bug_sub_C(word):
     key_neighbors = get_key_neighbors()
     point = random.randint(0,len(word)-1)
 
-
+    if word[point] not in key_neighbors:
+        return word
     choices = key_neighbors[word[point]]
     subbed_choice = choices[random.randint(0,len(choices)-1)]
     res = list(res)
     res[point] = subbed_choice
     res = ''.join(res)
-    # pprint.pprint(key_neighbors)
-
 
     return res
 
-def bug_sub_W(word):
-    # return word
+def bug_sub_W(word, glove_vectors):
+    if word not in glove_vectors:
+        return word
 
-    # FILL
-    res = word
-    # topk_neighbors = get_topk_neighbors(word)
-
-    # topk = 5
-    # res = topk_neighbors[random.randint(0,topk)]
-
-
-
-
-    # loadGloveVectors()
-    glove_vectors = {}
-    with open('glove_vectors.json') as json_file:
-        glove_vectors = json.load(json_file)
-    print(find_closest_words(glove_vectors[word], glove_vectors)[1:6])
-
-
-
-
-    return res
+    closest_neighbors = find_closest_words(glove_vectors[word], glove_vectors)[1:6]
+    
+    return random.choice(closest_neighbors)
+    # return closest_neighbors # Change later
 
 
 
@@ -130,13 +114,7 @@ def get_key_neighbors():
     neighbors['q'] += '9'
     neighbors['o'] += '0'
 
-
-
     return neighbors
-
-def get_topk_neighbors(word):
-    # FILL
-    return word
 
 def find_closest_words(point, glove_vectors):
     return sorted(glove_vectors.keys(), key=lambda word: spatial.distance.euclidean(glove_vectors[word], point))
@@ -145,70 +123,9 @@ def find_closest_words(point, glove_vectors):
 
 
 
-generateBugs("happy")
 
 
 
-
-
-## Only use once to get JSON
-## Depracated
-# def loadGloveVectors():
-#     embeddings_dict = {}
-    
-#     # with open("glove.840B.300d.txt", 'r', encoding="utf8") as f:
-#     f = open(r"glove.840B.300d.txt", 'r', errors = 'ignore', encoding="utf8")
-
-#     print("opened")
-#     idx = 0
-#     for line in f:
-#         # if (count > 5):
-#         #     break
-#         values = line.split()
-#         word = values[0]
-#         vector = np.asarray(values[1:], "float32")
-
-#         # print(vector)
-#         vector = vector.tolist()
-#         embeddings_dict[word] = vector
-#         if (idx > 100):
-#             break
-#         # count += 1
-
-    
-#     with open('glove_vectors.json', 'w') as fp:
-#         json.dump(embeddings_dict, fp)
-
-## This function works 
-# def loadGloveVectors():
-#     embedding_model = {}
-#     f = open(r'glove.840B.300d.txt', "r", encoding="utf8")
-#     idx = 0
-#     for line in f:
-#         values = line.split()
-#         word = ''.join(values[:-300])
-#         coefs = np.asarray(values[-300:], dtype='float32').tolist()
-#         embedding_model[word] = coefs
-
-#         idx += 1
-#     f.close()
-#     print("done")
-#     with open('glove_vectors.json', 'w') as fp:
-#         json.dump(embedding_model, fp)
-
-# loadGloveVectors()
-# generateBugs("and")
-
-# print(find_closest_words(glove_vectors[word], glove_vectors)[1:6])
-
-
-# Debugging purposes
-# for i in range(0, 20):
-    # print(bug_delete("ht"))
-    # print(bug_insert("cat"))
-    # print(bug_swap("carpet"))
-    # print(bug_sub_C("lease"))
-    # print(bug_sub_W("happy"))
 
 
 

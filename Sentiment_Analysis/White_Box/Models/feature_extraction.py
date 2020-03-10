@@ -46,7 +46,7 @@ def featureExtraction_IMDB_Train(self, data):
             for point in data[key1][key2]:
                 print(len(point))
                 vector = self.getFeatureVector(point, glove_vectors)
-                feature_vectors.append(vector)
+                feature_vectors.append(vector) # feature_vectors contains the mean of each sentence/input
 
             data[key1][key2] = feature_vectors
 

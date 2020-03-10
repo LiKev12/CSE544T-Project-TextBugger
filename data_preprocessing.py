@@ -149,17 +149,110 @@ def getMRData():
     print(data["pos"])
 
 
+def getMRDataForTrainTest():
+    with open('data/RT_text_tokenized.p','rb') as fp:
+        data = pickle.load(fp)
+    
+    all_pos = data['pos']
+    all_neg = data['neg']
+
+
+    X_pos = np.array(all_pos)
+    X_neg = np.array(all_neg)
+    x_len = len(all_pos)
+
+
+    y_pos = [1] * x_len
+    y_neg = [0] * x_len
+
+
+    train = {}
+    test = {}
+
+    train['pos'] = []
+    train['neg'] = []
+
+    test['pos'] = []
+    test['neg'] = []
+
+
+    X_train,X_test,y_train,y_test = train_test_split(X_pos, y_pos, test_size=0.5)
+    # train['pos'].append(X_train)
+    # test['pos'].append(X_test)
+    train['pos'] = X_train
+    test['pos'] = X_test
+
+    X_train,X_test,y_train,y_test = train_test_split(X_neg, y_neg, test_size=0.5)
+    train['neg']= X_train
+    test['neg'] = X_test
+    
+    print(len(train['pos']))
+    print(len(train['neg']))
+    print(len(test['pos']))
+    print(len(test['neg']))
+
+
+    with open('data/RT_tokenized_TRAIN.p', 'wb') as fp:
+        pickle.dump(train, fp)
+    with open('data/RT_tokenized_TEST.p', 'wb') as fp:
+        pickle.dump(test, fp)
+
+
+def loadMRData_Train():
+    MR_text = {}
+    MR_text["pos"] = []
+    MR_text["neg"] = []
+
+    base_path = "data/MR"
+    labels = ["pos", "neg"]
+
+    for label in labels:
+        file = os.path.join(base_path, 'rt-polarity.'+label)
+        f = smart_open.open(file, 'r', encoding='latin-1')
+        for line in f.readlines():
+            tokens = nltk.word_tokenize(line)
+            MR_text[label].append(tokens)
+
+    with open('data/RT_tokenized_TRAIN.p', 'wb') as fp:
+        pickle.dump(MR_text, fp)
+        
+def loadMRData_Test():
+    MR_text = {}
+    MR_text["pos"] = []
+    MR_text["neg"] = []
+
+    base_path = "data/MR"
+    labels = ["pos", "neg"]
+
+    for label in labels:
+        i = 0
+        file = os.path.join(base_path, 'rt-polarity.'+label)
+        f = smart_open.open(file, 'r', encoding='latin-1')
+        for line in f.readlines():
+            tokens = nltk.word_tokenize(line)
+            MR_text[label].append(tokens)
+
+    with open('data/RT_tokenized_TEST.p', 'wb') as fp:
+        pickle.dump(MR_text, fp)
+
+
+
+
 if __name__=="__main__":
     # Only use once to get JSON
     #loadGloveVectors()
 
     # transform tokenized IMDB and MR data into numpy array
     #loadIMDBData()
-    loadMRData()
+    # loadMRData()
 
     # read data from pickle
-    getMRData()
+    # getMRData()
 
     # convert data to vectors
     #getIMDBDoc2Vec()
+
+    # loadMRData_Train()
+    # loadMRData_Test()
+    # getMRDataForTrainTest()
 

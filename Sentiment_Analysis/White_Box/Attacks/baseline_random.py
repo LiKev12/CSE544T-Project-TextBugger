@@ -9,50 +9,53 @@ import csv
 import json
 import re
 
+import sys
+sys.path.insert(0, '../../../')
+
+from generate_bugs import generateBugs
+from feature_transform import transform_to_feature_vector
+from semantic_similarity import getSemanticSimilarity
+
+# from "../../../generate_bugs.py" import generateBugs
+# from "../../../feature_transform.py" import transform_to_feature_vector
+
+class Attack_Random():
+
+    def __init__(self, X, F, epsilon, glove_vectors): 
+        self.X = X # Sentence tokens ['I', 'enjoy','playing','outside']
+        self.F = F
+        self.epsilon = epsilon
+        self.glove_vectors = glove_vectors
 
 
-
-def baseline_random(input_text):
-
-    input_text = preprocess(input_text)
-    lines = input_text.split(".")
-    numWords = 0
-    perturbed = 0
-    for i in range(0,len(lines)):
-
-        output = randomlyModify(lines[i])
-        lines[i] = output[0]
-        numWords += output[1]
-        perturbed += output[2]
+    def attack_random(self):
         
-    # print(perturbed)    
-    # print(numWords)
-    print(str(round(float(perturbed*100/numWords),1)) + "% perturbed")
-
-    res = ".".join(lines)
-    print(res)
-    return res
-
-
-def randomlyModify(point):
-
-    words = point.split(" ")
-    numWords = len(words)
-    perturbed = 0
-
-    for i in range(0,len(words)):
-        rn = random.random()
-        if (rn> 0.90):
-            perturbed += 1
-            words[i] = getModifiedWord(words[i])
-
-    return " ".join(words), numWords, perturbed
-
-def getModifiedWord(word):
-    point = word
-    return word
-    
+        y_pred_before = self.F.predict(transform_to_feature_vector(self.X, self.glove_vectors))
+        
+        X_prime = self.get_random()
+        # print(self.X)
+        # print(X_prime)
+        y_pred_after = self.F.predict(transform_to_feature_vector(X_prime, self.glove_vectors))
 
 
-sentence = "If you can imagine a furry humanoid seven feet tall, with the face of an intelligent gorilla and the braincase of a man, you'll have a rough idea of what they looked like -- except for their teeth. The canines would have fitted better in the face of a tiger, and showed at the corners of their wide, thin-lipped mouths, giving them an expression of ferocity."
-baseline_random(sentence)
+        ## Success = 1
+
+        if getSemanticSimilarity(self.X, X_prime, self.epsilon) < self.epsilon:
+            return 0
+
+        if y_pred_after != y_pred_before:
+            return 1
+        else:
+            return 0
+
+
+    def get_random(self):
+        
+        X_prime = self.X.copy()
+        for i in range(0,len(X_prime)):
+            rn = random.random()
+            if rn > 0.90:
+                bugs = generateBugs(X_prime[i], self.glove_vectors)
+                X_prime[i] = random.choice(list(bugs.values()))
+            
+        return X_prime
