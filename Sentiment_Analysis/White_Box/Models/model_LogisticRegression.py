@@ -11,6 +11,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
+from sklearn import metrics
 
 from sklearn.svm import LinearSVC, SVC
 from sklearn.model_selection import GridSearchCV
@@ -19,6 +20,8 @@ import matplotlib as mpl
 mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, roc_curve, auc, classification_report, accuracy_score
+from sklearn.metrics import roc_curve, auc, f1_score, classification_report, confusion_matrix, precision_score, recall_score, roc_auc_score
+
 import pickle
 
 from operator import add
@@ -134,8 +137,8 @@ class Logistic_Regression():
         model.fit(X_train, y_train)
 
         # save the classifier
-        with open('LogisticRegression_IMDB.pkl', 'wb') as fid:
-            pickle.dump(model, fid)    
+        # with open('LogisticRegression_IMDB.pkl', 'wb') as fid:
+        #     pickle.dump(model, fid)    
 
         return model
 
@@ -144,8 +147,8 @@ class Logistic_Regression():
         model.fit(X_train, y_train)
 
         # save the classifier
-        with open('LogisticRegression_RT.pkl', 'wb') as fid:
-            pickle.dump(model, fid)    
+        # with open('LogisticRegression_RT.pkl', 'wb') as fid:
+        #     pickle.dump(model, fid)    
 
         return model
 
@@ -159,7 +162,42 @@ class Logistic_Regression():
         print("TESTING SCORE: " + str(accuracy_score(y_test, y_pred)))
         return accuracy_score(y_test, y_pred)
 
-    
+    def get_ROC_Curves(self, model, X_val, y_val, dataset_used):
+        y_pred = model.predict(X_val)
+        # print(y_pred)
+        # print(y_val)
+
+        y_proba = model.predict_proba(X_val)[:,1]
+        y_proba = np.array(y_proba)
+        y_val = np.array(y_val)
+
+        fpr, tpr, thresholds = metrics.roc_curve(y_val, y_proba)
+        roc_auc = auc(fpr,tpr)
+
+        precision = precision_score(y_val, y_pred)
+        recall = recall_score(y_val, y_pred)
+        f1 = f1_score(y_val, y_pred)
+        AUC = roc_auc_score(y_val, y_pred)
+
+        print("precision: " + str(round(precision,3)))
+        print("recall: " + str(round(recall,3)))
+        print("f1_score: " + str(round(f1,3)))
+        print("AUC: " + str(round(AUC,3)))
+
+        plt.figure()
+        plt.xlim([0,1])
+        plt.ylim([0,1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('ROC Curve for LR on ' + dataset_used)
+        plt.plot([0,1],[0,1], color='navy', lw=2, linestyle='--')
+
+        # plt.plot(fpr, tpr, color='orange',lw=2, label = dataset_used)
+        plt.plot(fpr, tpr, color='darkorange',lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+        plt.legend(loc='lower right')
+        plt.savefig('../Plots/ROC_LR_' + dataset_used + '.png')
+        # plt.show()
+
 if __name__ == "__main__":
 
 
@@ -175,11 +213,16 @@ if __name__ == "__main__":
         model = logreg.train_IMDB(X_train, y_train)
         logreg.validate(model, X_val, y_val)
         logreg.test_IMDB(model, X_test, y_test)
+
+        logreg.get_ROC_Curves(model, X_test, y_test, dataset_used)
     elif dataset_used == "RT":
         logreg = Logistic_Regression()
         X_train, X_val, y_train, y_val = logreg.load_data_RT()
         model = logreg.train_RT(X_train, y_train)
         logreg.validate(model, X_val, y_val)
+
+        logreg.get_ROC_Curves(model, X_val, y_val, dataset_used)
+
     else:
         print("Incorrect parameters: Enter either [IMDB] or [RT]")
 

@@ -15,6 +15,7 @@ import pprint
 import pandas as pd
 
 from baseline_random import Attack_Random
+import sys
 
 
 
@@ -37,9 +38,8 @@ def call_text_attack_random():
 
 
     ## RT / LR
-
     glove_vectors = util_get_glove_vectors('../../../Glove_RT.json')
-    F = util_get_model('../Models/LogisticRegression_RT.pkl')
+    F = util_get_model('../Models/LogisticRegression_RT.pkl') 
 
     with open('../../../data/RT_tokenized_TEST.p','rb') as fp:
         data = pickle.load(fp)
@@ -54,6 +54,7 @@ def call_text_attack_random():
         score = test_attack_random(X, F, epsilon, glove_vectors)
         total_score += score
         idx += 1
+        print(total_score)
         print(idx)
         if idx > 500:
             break
@@ -79,6 +80,4 @@ def util_get_model(path_name):
 
 
 
-
-if __name__ == "__main__":
-    call_text_attack_random()
+call_text_attack_random()

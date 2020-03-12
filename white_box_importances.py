@@ -36,7 +36,6 @@ def get_word_importances_for_whitebox(tokens, glove_vectors):
     modelFileName = 'Sentiment_Analysis/White_Box/Models/LogisticRegression_RT.pkl'
     with open(modelFileName, 'rb') as fid:
         model = pickle.load(fid)
-
     pred = model.predict(vector)[0]
     # print("Prediction: " + str(pred))
 

@@ -35,25 +35,31 @@ except ImportError:
 
 
 
-def featureExtraction_IMDB_Train(self, data):
-    with open('../../../glove_vectors.json') as json_file:
+def featureExtraction_IMDB_Train():
+    print("Loading...")
+    with open('../../../Glove_IMDB.json') as json_file:
         glove_vectors = json.load(json_file)
-    print("DONE")
+    print("DONE LOADING GLOVE")
+
+    with open('../../../data/IMDB_text_tokenized.p', 'rb') as fp:
+        data = pickle.load(fp)
+    
+    print("DONE LOADING IMDB")
 
     for key1 in data:
         for key2 in data[key1]:
             feature_vectors = []
             for point in data[key1][key2]:
-                print(len(point))
-                vector = self.getFeatureVector(point, glove_vectors)
+                vector = getFeatureVector(point, glove_vectors)
                 feature_vectors.append(vector) # feature_vectors contains the mean of each sentence/input
 
             data[key1][key2] = feature_vectors
 
-
+    print("Done assigning...")
     # Do one time for future use
     with open('../../../data/IMDB_vectors.p', 'wb') as fp:
         pickle.dump(data, fp)
+    print("Done")
 
 def featureExtraction_RT(self, data):
     print("Extracting RT...")
@@ -76,7 +82,7 @@ def featureExtraction_RT(self, data):
         pickle.dump(data, fp)
 
 
-def getFeatureVector(self, point, glove_vectors):
+def getFeatureVector(point, glove_vectors):
     numTokens = 0
     vect = np.asarray([0] * 300)
     for token in point:
@@ -86,3 +92,5 @@ def getFeatureVector(self, point, glove_vectors):
     vect = np.divide(vect, numTokens)
     return vect
 
+
+featureExtraction_IMDB_Train()

@@ -13,6 +13,7 @@ import nltk
 import time
 import pprint
 import pandas as pd
+import random
 
 
 def transform_to_feature_vector(tokens, glove_vectors):
@@ -21,6 +22,13 @@ def transform_to_feature_vector(tokens, glove_vectors):
         if token in glove_vectors:
             vect = glove_vectors[token]
             vectors.append(vect)
+        else:
+            # sampling from the uniform distribution in [-0.1, 0.1]
+            vect = [(random.random()/5)-0.1 for i in range(300)]
+            vectors.append(vect)
 
     means = np.mean(vectors, axis=0)
-    return [means]
+    return [means] # [ [x11,x12,x13,...]  ]
+
+
+

@@ -37,6 +37,8 @@ class Attack_Random():
         # print(X_prime)
         y_pred_after = self.F.predict(transform_to_feature_vector(X_prime, self.glove_vectors))
 
+        # print(self.X)
+        # print(X_prime)
 
         ## Success = 1
 
@@ -54,7 +56,7 @@ class Attack_Random():
         X_prime = self.X.copy()
         for i in range(0,len(X_prime)):
             rn = random.random()
-            if rn > 0.90:
+            if rn > 0.10:
                 bugs = generateBugs(X_prime[i], self.glove_vectors)
                 X_prime[i] = random.choice(list(bugs.values()))
             
