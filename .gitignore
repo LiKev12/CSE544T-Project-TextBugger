@@ -3,3 +3,8 @@ data/
 Glove_RT.json
 Glove_Test.json
 Glove_IMDB.json
+venv/
+old/
+glove_final.json
+datasets/
+models/

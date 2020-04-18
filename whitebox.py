@@ -1,33 +1,24 @@
-
 import sys
-from generate_bugs import generateBugs
-from operator import itemgetter
 from collections import OrderedDict
 import random
 import pprint
-from gensim.models import Word2Vec
-from white_box_importances import get_word_importances_for_whitebox
-from feature_transform import transform_to_feature_vector
-from semantic_similarity import getSemanticSimilarity
+from whitebox_utils import get_prediction_given_tokens, getSemanticSimilarity, transform_to_feature_vector, get_word_importances_for_whitebox, generateBugs
+import numpy as np
 
 class WhiteBox():
 
-    def __init__(self, X, y, F, epsilon, glove_vectors): 
+    def __init__(self, X, y, F, epsilon, model_type, glove_vectors, embed_map): 
         self.X = X # Sentence Tokens Ex. ['I','enjoy','playing','outside']
         self.y = y # Predicted score: 0/1
         self.F = F # Classifier/Model 
         self.epsilon = epsilon
+        self.model_type = model_type
         self.glove_vectors = glove_vectors
+        self.embed_map = embed_map
 
     def whiteBoxAttack(self):
         print("whiteBoxAttack")
         # Lines 2-5: Compute importance C
-        original_proba = self.F.predict_proba(transform_to_feature_vector(self.X, self.glove_vectors))[0][1]
-        if abs(original_proba - 0.5) > 0.05:
-            print("Impossible")
-            return None
-
-
 
         W_ordered = get_word_importances_for_whitebox(self.X, self.glove_vectors)
         print(W_ordered)
@@ -37,32 +28,18 @@ class WhiteBox():
         num_words_total = len(W_ordered)
         num_perturbed = 0
 
-
-
-
-
-        print(("Original: " + str(self.y)))
-
         for x_i in W_ordered:
             bug = self.selectBug(x_i)
             x_prime = self.replaceWithBestBug(x_prime, x_i, bug)
-            prediction = self.F.predict(transform_to_feature_vector(x_prime, self.glove_vectors))[0]
+            # prediction = self.F.predict(transform_to_feature_vector(x_prime, self.glove_vectors))[0]
+            prediction_proba = get_prediction_given_tokens(self.model_type, self.F, x_prime, glove_vectors = self.glove_vectors, embed_map = self.embed_map)
+            prediction = np.round(prediction_proba,0)
             num_perturbed += 1
-
-
-            prediction_proba = self.F.predict_proba(transform_to_feature_vector(x_prime, self.glove_vectors))[0][1]
-
-            # print("Original: " + str(self.y) + " | Adversary: " + str(prediction))
-            # print(prediction_proba[1])
-            # print(" | Adversary: " + str(prediction_proba))
-            print(str(prediction) + " " + str(prediction_proba))
-
-
+            
 
             if getSemanticSimilarity(self.X, x_prime, self.epsilon) <= self.epsilon:
                 return None
             elif prediction != self.y:
-                print("FOUND")
                 return x_prime,float(num_perturbed/num_words_total)
         print("None found")
         return None
@@ -107,7 +84,3 @@ class WhiteBox():
         tokens = x_prime
         new_tokens = [bug if x == x_i else x for x in tokens]
         return new_tokens
-
-
-
-

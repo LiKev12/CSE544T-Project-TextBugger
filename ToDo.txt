@@ -1,7 +1,72 @@
 
-> ROC Curve (IMDB, RT)
-> WB SA Chart
-> 
+TODO: 04/15
+
+
+- Figure 3:
+    > Plot of word importances in a sentence (easy) KL
+
+- Table 2:
+    > CNN Model
+    > LSTM Model
+    > FGSM+NNS
+    > DeepFool+NNS
+
+- Table 3:
+    > DeepWordBug
+    > Various target models (let's pick 5):
+        > Google Cloud NLP
+        > IBM Watson
+        > Microsoft Azure
+        > Amazon AWS
+        > Facebook fastText
+
+- Figure 4:
+    > Metrics vs. # of words in document
+        > Success Rate
+        > Change in Score
+        > Time
+    
+- Figure 5:
+    > Blackbox model evaluation
+        > Attacks against:
+            > Google NLP
+            > IBM Watson
+            > Microsoft Azure
+            > AWS
+            > fastText
+
+
+- Figure 6-9:
+    > Different similarity metrics
+        > Edit Distance
+        > Jaccard Coefficient
+        > Euclidean Distance
+
+
+Toxic Content Detection
+    > Kaggle dataset
+    > LR, CNN, LSTM models
+    
+
+- KL
+    > Datasets
+    >
+
+
+
+- RY
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
