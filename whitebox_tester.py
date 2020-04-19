@@ -15,9 +15,10 @@ import keras
 
 
 
-def testWhiteBoxSentimentAnalysis(data_type, model_type, embed_map=None):
+def testWhiteBoxSentimentAnalysis(data_type, model_type):
     ## Import glove-vectors once
     glove_vectors = json.load( open( "glove_final.json", "rb") )
+    embed_map = pickle.load( open( "datasets/embed_map.p", "rb" ) )
 
     ## Get Dataset (2 types: IMDB, RT)
     if (data_type == 'IMDB'):
@@ -38,6 +39,11 @@ def testWhiteBoxSentimentAnalysis(data_type, model_type, embed_map=None):
         elif(data_type == 'RT'):
             model = pickle.load( open( "models/LSTM/LSTM_SA_RT.p", "rb" ))
 
+    elif (model_type == 'CNN'):
+        if (data_type == 'IMDB'):
+            model = pickle.load( open( "models/CNN/CNN_SA_IMDB.p", "rb" ))
+        elif(data_type == 'RT'):
+            model = pickle.load( open( "models/CNN/CNN_SA_RT.p", "rb" ))
 
     num_successes = 0 
     total_docs = 0
@@ -46,12 +52,12 @@ def testWhiteBoxSentimentAnalysis(data_type, model_type, embed_map=None):
         for key2 in data[key1]:
             docs = data[key1][key2]
             for doc in docs:
-                y = get_prediction_given_tokens(model_type, model, doc, glove_vectors = glove_vectors, embed_map = embed_map)
+                y = get_prediction_given_tokens(model_type, model, doc, glove_vectors = glove_vectors, embed_map = embed_map, dataset=data_type)
                 if (np.abs(y - 0.5) > 0.1):
                     # print("IMPOSSIBLE")
                     continue
                 y = np.round(y,0)
-                whitebox = WhiteBox(doc,y,model,0.8,model_type, glove_vectors, embed_map)
+                whitebox = WhiteBox(doc,y,model,0.8,model_type, glove_vectors, embed_map, data_type)
                 res = whitebox.whiteBoxAttack()
                 if res != None:
                     num_successes += 1
@@ -62,10 +68,18 @@ def testWhiteBoxSentimentAnalysis(data_type, model_type, embed_map=None):
     print("{} successful adversaries out of {} total documents. Success rate = {}".format(num_successes,total_docs,np.round(num_successes/total_docs,2)))
 
 
-embed_map = pickle.load( open( "datasets/embed_map.p", "rb" ) )
-testWhiteBoxSentimentAnalysis('IMDB','LSTM',embed_map = embed_map)
-# testWhiteBoxSentimentAnalysis('RT','LSTM',embed_map = embed_map)
-# testWhiteBoxSentimentAnalysis('RT','LR')
+
+
+
+
+
+# testWhiteBoxSentimentAnalysis('IMDB','LSTM')  # LSTM - IMDB
+# testWhiteBoxSentimentAnalysis('RT','LSTM')    # LSTM - RT
+# testWhiteBoxSentimentAnalysis('IMDB','CNN')   # CNN  - IMDB
+# testWhiteBoxSentimentAnalysis('RT','CNN')     # CNN  - RT
+# testWhiteBoxSentimentAnalysis('IMDB','LR')    # LR - RT
+# testWhiteBoxSentimentAnalysis('RT','LR')      # LR - IMDB
+
 
 
 

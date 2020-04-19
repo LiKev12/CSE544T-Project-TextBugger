@@ -5,18 +5,22 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 import pprint
+import nltk
+import time
+
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Embedding
 from keras.datasets import imdb
 from keras.preprocessing import sequence
-import nltk
+from keras.layers import Dense, Dropout, Activation
+from keras.layers import Embedding, LSTM
+from keras.layers import Conv1D, Flatten, MaxPooling1D
 
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
-import time
 
 def get_vector_same_len(doc,max_len):
     
@@ -188,12 +192,6 @@ def get_single_embed(doc,emb_map):
     for word in doc:
         res.append(emb_map[word])
     return res
-
-
-
-
-
-
 
 
 
@@ -718,12 +716,12 @@ def make_LR(dataset):
     print(acc)
     # preds = model.predict_proba(x_test)
 
-    pickle.dump(model, open( "models/LR/LR_SA_{}.p".format(dataset), "wb" ))
+    # pickle.dump(model, open( "models/LR/LR_SA_{}.p".format(dataset), "wb" ))
 
 
 
-# make_LR('RT')
-# make_LR('IMDB')
+# make_LR('RT') # 77.42%
+# make_LR('IMDB') # 84.96%%
 
 
 
@@ -1128,15 +1126,161 @@ def generate_new_embeddings(dataset,max_len):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+def get_cnn(dataset, epochs):
+    data = pickle.load( open( "datasets/{}/{}_embeddings.p".format(dataset, dataset), "rb" ) )
+    emb_map = pickle.load( open( "datasets/embed_map.p", "rb" ) )
+    vocab_size = len(list(emb_map['w2i'].keys()))
+    print('Vocab size is {}'.format(vocab_size))
+
+    ## Train
+    x_train_pos = data['train']['pos']
+    x_train_neg = data['train']['neg']
+    x_train = []
+    x_train.extend(x_train_pos)
+    x_train.extend(x_train_neg)
+    y_train = [1 for i in range(len(x_train_pos))]
+    y_train.extend([0 for i in range(len(x_train_neg))])
+    x_train = np.array(x_train, dtype='float')
+    y_train = np.array(y_train, dtype='float')
+
+    ## Test
+    x_test_pos = data['test']['pos']
+    x_test_neg = data['test']['neg']
+    x_test = []
+    x_test.extend(x_test_pos)
+    x_test.extend(x_test_neg)
+    y_test = [1 for i in range(len(x_test_pos))]
+    y_test.extend([0 for i in range(len(x_test_neg))])
+    x_test = np.array(x_test, dtype='float')
+    y_test = np.array(y_test, dtype='float')
+
+
+    ## Shuffle
+    x_train,y_train = shuffle(x_train, y_train)
+    x_test,y_test = shuffle(x_test,y_test)
+
+    ## Model
+    max_len = x_train.shape[1]
+    batch_size = 32
+    embedding_dims=10
+    filters=16
+    kernel_size=3
+    hidden_dims=250
+
+    model = Sequential()
+    model.add(Embedding(vocab_size, embedding_dims, input_length=max_len))
+
+    model.add(Dropout(0.5))
+    model.add(Conv1D(filters,kernel_size,padding='valid',activation='relu'))
+    model.add(MaxPooling1D())
+    model.add(Conv1D(filters, kernel_size, padding='valid', activation='relu'))
+    model.add(MaxPooling1D())
+    model.add(Flatten())
+    model.add(Dense(hidden_dims, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(1, activation='sigmoid'))
+
+    model.compile(loss='binary_crossentropy',optimizer='adam',metrics=['accuracy'])
+
+    model.fit(x_train, y_train, batch_size = batch_size, epochs = epochs, validation_data=(x_test, y_test))
+
+    loss, acc = model.evaluate(x_test, y_test)
+    print('CNN Model -- ACC {} -- LOSS {}'.format(acc,loss))
+    print('{} model done!'.format(dataset))
+
+
+    pickle.dump(model, open( "models/CNN/CNN_SA_{}.p".format(dataset), "wb" ))
+
+
+# get_cnn('RT',5) # 70.24%
+# get_cnn('IMDB',2) # 85.20%
+
+
+
+
+
     
 
 
+def see_tokens():
+
+    idx = 0
+    data = pickle.load( open( "datasets/IMDB/IMDB_tokens.p", "rb" ) )
+    for key1 in data:
+        for key2 in data[key1]:
+            docs = data[key1][key2]
+            for doc in docs:
+                print(doc)
+                idx += 1
+                if idx > 5:
+                    return
+
+# see_tokens()
+
+
+
+def debug_cnn(dataset):
+    data = pickle.load( open( "datasets/{}/{}_embeddings.p".format(dataset, dataset), "rb" ) )
+    model = pickle.load( open( "models/CNN/CNN_SA_{}.p".format(dataset), "rb" ) )
+    emb_map = pickle.load( open( "datasets/embed_map.p", "rb" ) )
+    vocab_size = len(list(emb_map['w2i'].keys()))
+    print('Vocab size is {}'.format(vocab_size))
+
+    ## Train
+    x_train_pos = data['train']['pos']
+    x_train_neg = data['train']['neg']
+    x_train = []
+    x_train.extend(x_train_pos)
+    x_train.extend(x_train_neg)
+    y_train = [1 for i in range(len(x_train_pos))]
+    y_train.extend([0 for i in range(len(x_train_neg))])
+    x_train = np.array(x_train, dtype='float')
+    y_train = np.array(y_train, dtype='float')
+
+    ## Test
+    x_test_pos = data['test']['pos']
+    x_test_neg = data['test']['neg']
+    x_test = []
+    x_test.extend(x_test_pos)
+    x_test.extend(x_test_neg)
+    y_test = [1 for i in range(len(x_test_pos))]
+    y_test.extend([0 for i in range(len(x_test_neg))])
+    x_test = np.array(x_test, dtype='float')
+    y_test = np.array(y_test, dtype='float')
+
+    # x_test = np.hstack((x_test, np.ones((x_test.shape[0],1))))
+    # print(x_test.shape)
+
+
+    print(x_test[0:5].shape)
+    print(x_test[0].transpose().shape)
+
+    loss, acc = model.evaluate(x_test[0:5], y_test[0:5])
+
+    score = model.predict([[x_test[0]]])
+    # score = model.predict(x_test[0:5])
+
+    print(score)
+    print(acc)
 
 
 
 
 
-
+debug_cnn('IMDB')
 
 
 

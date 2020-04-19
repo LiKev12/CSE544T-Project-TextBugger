@@ -11,26 +11,54 @@ from scipy import spatial
 
 
 
-def get_prediction_given_tokens(model_type, model, doc, glove_vectors = None, embed_map = None):
+def get_prediction_given_tokens(model_type, model, doc, glove_vectors = None, embed_map = None, dataset = None):
     if (model_type == 'LSTM'):
         X_embed = []
         for word in doc:
-            if word in embed_map:
+            if word in embed_map['w2i']:
                 X_embed.append(embed_map['w2i'][word])
             else:
-                X_embed.append(random.randint(1,10))
-
-        print(X_embed)
+                X_embed.append(random.randrange(1,170000))
         y = model.predict(X_embed)[0][0]
+        # print(X_embed)
         return y
-        
+    elif (model_type == 'CNN'):
+        X_embed = []
+        for word in doc:
+            if word in embed_map['w2i']:
+                X_embed.append(embed_map['w2i'][word])
+            else:
+                X_embed.append(random.randrange(1,170000))
+
+        X_embed = chunk_input(X_embed, dataset)
+        y = model.predict([[X_embed]])[0][0]
+        return y
     elif (model_type == 'LR'):
         X_vector = transform_to_feature_vector(doc, glove_vectors)
         y = model.predict_proba(X_vector)[0][1]
         return y
-    
-    elif (model_type == 'CNN'):
-        print('CNN')
+
+def chunk_input(doc, dataset):
+    doc_size = len(doc)
+
+    if (dataset == 'RT'):
+        max_len = 20
+    elif (dataset == 'IMDB'):
+        max_len = 200
+
+    if (doc_size > max_len):
+        res = doc[0:max_len]
+        return res
+    elif (doc_size < max_len):
+        diff = max_len - doc_size
+        for i in range(0,diff):
+            doc.append(random.randint(1,10))
+        return doc
+    else:
+        return doc
+
+
+
 
 
 
@@ -63,28 +91,17 @@ def getSemanticSimilarity(X, X_prime, epsilon):
 
 ## JACOBIAN MATRIX -------------------------------------------------------------
 
-def get_word_importances_for_whitebox(tokens, glove_vectors):
+def get_word_importances_for_whitebox(tokens, y, F, model_type, glove_vectors, embed_map, dataset):
 
-    ## Transform tokens to the avg feature vector
-    vector = transform_to_feature_vector(tokens, glove_vectors)
-
-    ## Load model, get prediction for whole document
-    modelFileName = 'Sentiment_Analysis/White_Box/Models/LogisticRegression_RT.pkl'
-    with open(modelFileName, 'rb') as fid:
-        model = pickle.load(fid)
-    pred = model.predict(vector)[0]
-
-    pred_proba = model.predict_proba(vector)[0][1]
-
+    pred_proba = get_prediction_given_tokens(model_type, F, tokens, glove_vectors = glove_vectors, embed_map = embed_map, dataset = dataset)
+    pred = y
 
     ## Compute importance for each word
     excludes = get_excludes(tokens)         # To see the relative importance of each word, remove that word and predict
     
     JM = {}
     for ex_word, ex_tokens in excludes.items():
-        ex_vect = transform_to_feature_vector(ex_tokens, glove_vectors)
-
-        ex_pred_proba = model.predict_proba(ex_vect)[0][1]
+        ex_pred_proba = get_prediction_given_tokens(model_type, F, ex_tokens, glove_vectors = glove_vectors, embed_map = embed_map, dataset = dataset)
 
         if (pred == 1):
             C = pred_proba - ex_pred_proba
