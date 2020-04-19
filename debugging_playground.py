@@ -1,4 +1,5 @@
-
+from __future__ import unicode_literals, print_function
+from spacy.lang.en import English # updated
 import json
 import pickle
 import numpy as np
@@ -8,19 +9,28 @@ import pprint
 import nltk
 import time
 
-from keras.models import Sequential
-from keras.layers import Dense, LSTM, Embedding
-from keras.datasets import imdb
-from keras.preprocessing import sequence
-from keras.layers import Dense, Dropout, Activation
-from keras.layers import Embedding, LSTM
-from keras.layers import Conv1D, Flatten, MaxPooling1D
+# from keras.models import Sequential
+# from keras.layers import Dense, LSTM, Embedding
+# from keras.datasets import imdb
+# from keras.preprocessing import sequence
+# from keras.layers import Dense, Dropout, Activation
+# from keras.layers import Embedding, LSTM
+# from keras.layers import Conv1D, Flatten, MaxPooling1D
+# from keras import Input
+# # import tensorflow as tf
+# import tensorflow.compat.v1 as tf
+# tf.disable_v2_behavior()
+# from keras import backend as k
 
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 from sklearn.datasets import load_iris
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
+
+from nltk.tokenize.treebank import TreebankWordDetokenizer
+
+
 
 def get_vector_same_len(doc,max_len):
     
@@ -1201,8 +1211,8 @@ def get_cnn(dataset, epochs):
     print('CNN Model -- ACC {} -- LOSS {}'.format(acc,loss))
     print('{} model done!'.format(dataset))
 
-
-    pickle.dump(model, open( "models/CNN/CNN_SA_{}.p".format(dataset), "wb" ))
+    model.save('models/CNN/CNN_SA_{}.h5'.format(dataset))
+    # pickle.dump(model, open( "models/CNN/CNN_SA_{}.h5".format(dataset), "wb" ))
 
 
 # get_cnn('RT',5) # 70.24%
@@ -1280,7 +1290,127 @@ def debug_cnn(dataset):
 
 
 
-debug_cnn('IMDB')
+# debug_cnn('IMDB')
+
+
+
+def try_fgsm(dataset):
+
+    # model = pickle.load( open( "models/CNN/CNN_SA_{}.h5".format(dataset), "rb" ) )
+    model = tf.keras.models.load_model("models/CNN/CNN_SA_{}.h5".format(dataset))
+    data = pickle.load( open( "datasets/{}/{}_embeddings.p".format(dataset, dataset), "rb" ) )
+    # emb_map = pickle.load( open( "datasets/embed_map.p", "rb" ) )
+    # vocab_size = len(list(emb_map['w2i'].keys()))
+    # print('Vocab size is {}'.format(vocab_size))
+
+    ## Train
+    x_train_pos = data['train']['pos']
+    x_train_neg = data['train']['neg']
+    x_train = []
+    x_train.extend(x_train_pos)
+    x_train.extend(x_train_neg)
+    y_train = [1 for i in range(len(x_train_pos))]
+    y_train.extend([0 for i in range(len(x_train_neg))])
+    x_train = np.array(x_train, dtype='float')
+    y_train = np.array(y_train, dtype='float')
+
+    ## Test
+    x_test_pos = data['test']['pos']
+    x_test_neg = data['test']['neg']
+    x_test = []
+    x_test.extend(x_test_pos)
+    x_test.extend(x_test_neg)
+    y_test = [1 for i in range(len(x_test_pos))]
+    y_test.extend([0 for i in range(len(x_test_neg))])
+    x_test = np.array(x_test, dtype='float')
+    y_test = np.array(y_test, dtype='float')
+
+
+    ## Shuffle
+    x_train,y_train = shuffle(x_train, y_train)
+    x_test,y_test = shuffle(x_test,y_test)
+
+    # ## Model
+    # max_len = x_train.shape[1]
+    # batch_size = 32
+    # embedding_dims=10
+    # filters=16
+    # kernel_size=3
+    # hidden_dims=250
+    # epochs = 3
+
+    # model = Sequential()
+    # model.add(Embedding(vocab_size, embedding_dims, input_length=max_len))
+
+    # model.add(Dropout(0.5))
+    # model.add(Conv1D(filters,kernel_size,padding='valid',activation='relu'))
+    # model.add(MaxPooling1D())
+    # model.add(Conv1D(filters, kernel_size, padding='valid', activation='relu'))
+    # model.add(MaxPooling1D())
+    # model.add(Flatten())
+    # model.add(Dense(hidden_dims, activation='relu'))
+    # model.add(Dropout(0.5))
+    # model.add(Dense(1, activation='sigmoid'))
+
+    # model.compile(loss='binary_crossentropy',optimizer='adam',metrics=['accuracy'])
+
+    # model.fit(x_train, y_train, batch_size = batch_size, epochs = epochs, validation_data=(x_test, y_test))
+
+    # loss, acc = model.evaluate(x_test, y_test)
+    # print('CNN Model -- ACC {} -- LOSS {}'.format(acc,loss))
+    # print('{} model done!'.format(dataset))
+    # y_true = y_test
+    # y_pred = model.predict(x_test)
+
+
+    # print(y_true)
+    # print(y_pred)
+
+    # y_true = k.reshape(y_true, (-1, 2))
+    # y_pred = k.reshape(y_pred, (-1, 2))
+
+
+    print(model.summary())
+    print(len(model.layers))
+    get_dense_layer_output = k.function([model.layers[0].input],
+                                  [model.layers[9].output])
+
+    layer_output = get_dense_layer_output([x_train])[0]
+
+    y_test = y_test.astype('float32')
+    y_true = k.constant(y_test)
+    y_pred = k.constant(layer_output)
+    g = k.categorical_crossentropy(target=y_true, output=y_pred)
+    # g = k.mean(k.categorical_crossentropy(target=y_true, output=y_pred))
+    # grad_ce = k.gradients(g, model.input)
+    # print(grad_ce)
+    print(g)
+    ce = k.eval(g)  # 'ce' for cross-entropy
+    print(ce.shape)
+    print(ce)
+    # # output = func([model_input_array(s), true_labels])
+    # func = k.function(model.inputs + [y_true], grad_ce)
+
+    # # usage
+    # output = func([x_test, true_labels])
+    # print(output)
+    # return
+
+
+    return
+
+
+    # y_true = Input(shape=labels_shape)
+    ce = k.mean(k.categorical_crossentropy(y_true, model.output))
+    grad_ce = k.gradients(ce, model.inputs)
+    func = k.function(model.inputs + [y_true], grad_ce)
+    output = func([model_input_array(s), true_labels])
+    print(output)
+
+
+
+
+# try_fgsm('RT')
 
 
 
@@ -1311,3 +1441,215 @@ debug_cnn('IMDB')
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+def hw3_pgd(dataset, sess, epochs, epsilon):
+    # TODO: Implement PGD and return X_adv, the adversarial examples produced.
+    # TODO: Evaluate the overall accuracy of the of the model on the adversarial example in each epoch.
+
+    # target_model, X_seed, y_seed, epsilon, epoch, sess
+    data = pickle.load( open( "datasets/{}/{}_embeddings.p".format(dataset, dataset), "rb" ) )
+
+
+    # model = pickle.load( open( "models/CNN/CNN_SA_{}.p".format(dataset), "rb" ) )
+    model = tf.keras.models.load_model('models/CNN/CNN_SA_{}.h5'.format(dataset))
+
+    x_test_pos = data['test']['pos'][0:5]
+    x_test_neg = data['test']['neg'][0:5]
+    x_test = []
+    x_test.extend(x_test_pos)
+    x_test.extend(x_test_neg)
+    y_test = [1 for i in range(len(x_test_pos))]
+    y_test.extend([0 for i in range(len(x_test_neg))])
+    x_test = np.array(x_test, dtype='float')
+    y_test = np.array(y_test, dtype='float')
+
+
+    X_seed = np.copy(x_test)
+    y_seed = np.copy(y_test)
+
+    y_s = tf.placeholder('float', None) # plug in y_seed
+    model_input = model.input
+    model_output = model.output
+    loss = tf.keras.backend.sparse_categorical_crossentropy(y_s, model_output)
+    gradient_tensor = tf.gradients(loss, model_input)
+
+    X_adv_N = np.copy(X_seed)
+    y_seed_N = np.copy(y_seed)
+
+    for i in range(epochs):
+        print(i)
+        print(X_adv_N)
+        print(y_seed_N)
+        gradient = sess.run(
+            gradient_tensor, 
+            feed_dict = {
+                model_input: X_adv_N,
+                y_s: y_seed_N
+            }
+        )
+        print(gradient)
+        # X_adv_N = np.clip(X_adv_N + epsilon * np.sign(gradient), 0, 1)[0]
+        X_adv_N = X_adv_N + epsilon * np.sign(gradient)
+        print(X_adv_N)
+        # overall_evaluate(target_model, X_adv_N, y_seed_N)
+    return X_adv_N
+
+
+# with tf.Session() as sess:
+#     hw3_pgd('RT',sess, 3, 0.01)
+
+
+
+def sample_grad(dataset):
+
+    model = Sequential()
+    model.add(Dense(12, input_dim=8, init='uniform', activation='relu'))
+    model.add(Dense(8, init='uniform', activation='relu'))
+    model.add(Dense(1, init='uniform', activation='sigmoid'))
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+    outputTensor = model.output #Or model.layers[index].output
+    listOfVariableTensors = model.trainable_weights
+    gradients = k.gradients(outputTensor, listOfVariableTensors)
+    trainingExample = np.random.random((1,8))
+
+    sess = tf.InteractiveSession()
+    sess.run(tf.initialize_all_variables())
+    evaluated_gradients = sess.run(gradients,feed_dict={model.input:trainingExample})
+    # print(len(evaluated_gradients))
+    # for single in evaluated_gradients:
+    #     pprint.pprint(single)
+
+    ce_loss = k.mean(k.categorical_crossentropy(y_true, model.output))
+    gradients = k.gradients(ce_loss,model.inputs)
+    trainingExample = np.random.randint(50,size=(1,20))
+
+    sess = tf.InteractiveSession()
+    sess.run(tf.initialize_all_variables())
+    evaluated_gradients = sess.run(gradients, feed_dict={model.input:trainingExample})
+
+
+
+
+
+    y_true = k.reshape(y_true, (-1, num_classes))
+    y_pred = k.reshape(y_pred, (-1, num_classes))
+
+    # an input layer to feed labels
+    y_true = Input(shape=labels_shape)
+    # compute loss based on model's output and true labels
+    ce = K.mean(K.categorical_crossentropy(y_true, model.output))
+    # compute gradient of loss with respect to inputs
+    grad_ce = K.gradients(ce, model.inputs)
+    # create a function to be able to run this computation graph
+    func = K.function(model.inputs + [y_true], grad_ce)
+
+    # usage
+    output = func([model_input_array(s), true_labels])
+
+
+# sample_grad('RT')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def get_map_index_to_sentence(document):
+    sentences = get_sentences(document)
+    map_index_to_sentence = {}
+    for i in range(len(sentences)):
+        map_index_to_sentence[i] = sentences[i]
+
+
+
+
+def get_sentences(tokens):
+    original_review = TreebankWordDetokenizer().detokenize(tokens)
+    nlp = English()
+    nlp.add_pipe(nlp.create_pipe('sentencizer')) # updated
+    doc = nlp(original_review)
+    sentences = [sent.string.strip() for sent in doc.sents]
+    return sentences
+
+
+
+# get_sentences(['I','really','like','pie','.','How','about','you','?','I','had','a','bad','day','today','.'])
+
+
+
+
+
+
+def rank_sentences(sentences, whole_document_score, classifier=None):
+
+    map_sentence_to_importance = {}
+    # for i in range(len(sentences)):
+    for i in range(len(sentences)):
+        classifier_score = random.random()  ## Change later
+        if whole_document_score == 0:
+            importance = 0.5 - classifier_score
+        else:
+            importance = classifier_score - 0.5
+
+        if (importance > 0):
+            map_sentence_to_importance[i] = importance
+
+    sentences_sorted_by_importance = {k: v for k, v in sorted(map_sentence_to_importance.items(), key=lambda item: -item[1])}
+    print(sentences_sorted_by_importance)
+    return sentences_sorted_by_importance
+
+
+sentences = get_sentences(['I','really','like','pie','like','you','.','How','about','you','?','I','had','a','bad','day','today','.'])
+rank_sentences(sentences,1)
+
+
+
+def get_importances_of_words_in_sentence(sentence, classifier_score, classifier):
+    sentence_tokens = nltk.word_tokenize(sentence)
+
+    word_importances = {}
+    for curr_token in sentence_tokens:
+        sentence_tokens_without = [token for token in sentence_tokens if token != curr_token]
+        sentence_without = TreebankWordDetokenizer().detokenize(sentence_tokens_without)
+        word_score = random.random()
+        if (classifier_score == 0):
+            word_importance = 1 - word_score
+        else:
+            word_importance = word_score
+
+        word_importances[curr_token] = word_importance
+    word_importances = {k: v for k, v in sorted(word_importances.items(), key=lambda item: -item[1])}
+    print(word_importances)
+
+    return word_importances
+
+
+
+
+
+
+get_importances_of_words_in_sentence(sentences[0], 1, None)

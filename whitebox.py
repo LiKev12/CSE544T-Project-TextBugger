@@ -2,7 +2,7 @@ import sys
 from collections import OrderedDict
 import random
 import pprint
-from whitebox_utils import get_prediction_given_tokens, getSemanticSimilarity, transform_to_feature_vector, get_word_importances_for_whitebox, generateBugs
+from textbugger_utils import get_prediction_given_tokens, getSemanticSimilarity, transform_to_feature_vector, get_word_importances_for_whitebox, generateBugs
 import numpy as np
 
 class WhiteBox():

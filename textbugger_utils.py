@@ -8,6 +8,9 @@ import pandas as pd
 import keras
 import random
 from scipy import spatial
+from google.cloud import language
+from google.cloud.language import enums
+from google.cloud.language import types
 
 
 
@@ -242,3 +245,32 @@ def get_key_neighbors():
 
 def find_closest_words(point, glove_vectors):
     return sorted(glove_vectors.keys(), key=lambda word: spatial.distance.euclidean(glove_vectors[word], point))
+
+
+
+
+
+
+
+
+
+## BLACKBOX ----------------------------------------------------------------
+
+
+
+def get_blackbox_classifier_score(classifier_type, text):
+    if (classifier_type == "Google_NLP"):
+        ## Returns [-1,1]
+        client = language.LanguageServiceClient()
+        document = types.Document(
+            content=text,
+            type=enums.Document.Type.PLAIN_TEXT)
+        sentiment = client.analyze_sentiment(document=document).document_sentiment
+        return (sentiment.score + 1)/2
+
+
+
+
+
+
+

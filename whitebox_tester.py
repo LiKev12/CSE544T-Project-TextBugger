@@ -7,11 +7,9 @@ from sklearn.model_selection import train_test_split
 import nltk
 import time
 import pprint
-from whitebox_utils import get_prediction_given_tokens
+from textbugger_utils import get_prediction_given_tokens
 from whitebox import WhiteBox
 import keras
-
-
 
 
 
@@ -57,7 +55,7 @@ def testWhiteBoxSentimentAnalysis(data_type, model_type):
                     # print("IMPOSSIBLE")
                     continue
                 y = np.round(y,0)
-                whitebox = WhiteBox(doc,y,model,0.8,model_type, glove_vectors, embed_map, data_type)
+                whitebox = WhiteBox(doc,y,model, 0.8, model_type, glove_vectors, embed_map, data_type)
                 res = whitebox.whiteBoxAttack()
                 if res != None:
                     num_successes += 1
@@ -74,7 +72,7 @@ def testWhiteBoxSentimentAnalysis(data_type, model_type):
 
 
 # testWhiteBoxSentimentAnalysis('IMDB','LSTM')  # LSTM - IMDB
-# testWhiteBoxSentimentAnalysis('RT','LSTM')    # LSTM - RT
+testWhiteBoxSentimentAnalysis('RT','LSTM')    # LSTM - RT
 # testWhiteBoxSentimentAnalysis('IMDB','CNN')   # CNN  - IMDB
 # testWhiteBoxSentimentAnalysis('RT','CNN')     # CNN  - RT
 # testWhiteBoxSentimentAnalysis('IMDB','LR')    # LR - RT
