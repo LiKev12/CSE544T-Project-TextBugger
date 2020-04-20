@@ -1623,8 +1623,6 @@ def rank_sentences(sentences, whole_document_score, classifier=None):
     return sentences_sorted_by_importance
 
 
-sentences = get_sentences(['I','really','like','pie','like','you','.','How','about','you','?','I','had','a','bad','day','today','.'])
-rank_sentences(sentences,1)
 
 
 
@@ -1650,6 +1648,18 @@ def get_importances_of_words_in_sentence(sentence, classifier_score, classifier)
 
 
 
+# sentences = get_sentences(['I','really','like','pie','like','you','.','How','about','you','?','I','had','a','bad','day','today','.'])
+# rank_sentences(sentences,1)
 
 
-get_importances_of_words_in_sentence(sentences[0], 1, None)
+# get_importances_of_words_in_sentence(sentences[0], 1, None)
+
+
+
+def strops():
+    str1 = "english language neutral " 
+    str2 = "I like to walk."
+
+    res = str1+str2
+    print(res)
+strops()

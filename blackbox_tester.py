@@ -44,6 +44,7 @@ def testBlackBoxSentimentAnalysis(data_type, model_type):
                 sentence = TreebankWordDetokenizer().detokenize(token_list)
                 y = get_blackbox_classifier_score(model_type, sentence)
                 y_class = np.round(y,0)
+                print(sentence)
                 print('Original Score: {} | Label: {}'.format(y,y_class))
 
                 blackbox = BlackBox(token_list,y_class,0.8, model_type, glove_vectors, data_type)
@@ -58,7 +59,10 @@ def testBlackBoxSentimentAnalysis(data_type, model_type):
 
 
 
-model_type = 'Google_NLP'
-# testBlackBoxSentimentAnalysis('IMDB', model_type)
-testBlackBoxSentimentAnalysis('RT', model_type)
+# testBlackBoxSentimentAnalysis('RT', 'Google_NLP')
+# testBlackBoxSentimentAnalysis('RT', 'IBM_Watson')
+# testBlackBoxSentimentAnalysis('RT', 'Microsoft_Azure')
+# testBlackBoxSentimentAnalysis('RT', 'AWS_Comprehend')
+testBlackBoxSentimentAnalysis('RT', 'FB_fastText')
+
 

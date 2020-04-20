@@ -23,12 +23,8 @@ class BlackBox():
         self.dataset = dataset
 
     def blackBoxAttack(self):
-
         sentences_of_document = self.get_sentences()
-        print(sentences_of_document)
         ranked_sentences = self.rank_sentences(sentences_of_document)
-        print(ranked_sentences)
-
         x_prime = self.X.copy()
 
         num_perturbed = 0
@@ -46,7 +42,6 @@ class BlackBox():
 
                 print("{} => {}".format(word, bug))
                 print("Score: {}".format(prediction_proba))
-
 
                 if getSemanticSimilarity(self.X, x_prime, self.epsilon) <= self.epsilon:
                     return None
@@ -76,7 +71,7 @@ class BlackBox():
             if (importance > 0):
                 map_sentence_to_importance[i] = importance
 
-        sentences_sorted_by_importance = {k: v for k, v in sorted(map_sentence_to_importance.items(), key=lambda item: item[1])}
+        sentences_sorted_by_importance = {k: v for k, v in sorted(map_sentence_to_importance.items(), key=lambda item: -item[1])}
 
         return sentences_sorted_by_importance
 

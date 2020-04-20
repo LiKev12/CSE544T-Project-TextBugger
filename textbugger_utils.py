@@ -8,10 +8,22 @@ import pandas as pd
 import keras
 import random
 from scipy import spatial
+import json
+
 from google.cloud import language
 from google.cloud.language import enums
 from google.cloud.language import types
 
+from ibm_watson import NaturalLanguageUnderstandingV1
+from ibm_watson.natural_language_understanding_v1 import Features, EntitiesOptions, KeywordsOptions, SentimentOptions, CategoriesOptions
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+
+from azure.ai.textanalytics import TextAnalyticsClient
+from azure.core.credentials import AzureKeyCredential
+
+import boto3
+
+import fasttext
 
 
 def get_prediction_given_tokens(model_type, model, doc, glove_vectors = None, embed_map = None, dataset = None):
@@ -258,19 +270,59 @@ def find_closest_words(point, glove_vectors):
 
 
 
-def get_blackbox_classifier_score(classifier_type, text):
+def get_blackbox_classifier_score(classifier_type, input_text):
     if (classifier_type == "Google_NLP"):
         ## Returns [-1,1]
         client = language.LanguageServiceClient()
         document = types.Document(
-            content=text,
+            content=input_text,
             type=enums.Document.Type.PLAIN_TEXT)
         sentiment = client.analyze_sentiment(document=document).document_sentiment
         return (sentiment.score + 1)/2
 
+    elif(classifier_type == "IBM_Watson"):
+        ## Returns [-1,1]
+        input_text = "english language neutral " + input_text   # Requires filler text to know language
+        authenticator = IAMAuthenticator('OhWSxAvGKiqX184B53WztfP0ocegLbrNlsToafXNh80z')
+        service = NaturalLanguageUnderstandingV1(
+            version = '2018-11-16',
+            authenticator=authenticator
+        )
+        service.set_service_url('https://api.us-south.natural-language-understanding.watson.cloud.ibm.com/instances/ba395c41-50f0-4a7a-b6a5-9728116f8b97')
+        response = service.analyze (
+            text = input_text,
+            features = Features(
+                sentiment=SentimentOptions()
+                )
+            ).get_result()
+        res = (response.get('sentiment').get('document').get('score')+1)/2
+        return res
 
+    elif(classifier_type == "Microsoft_Azure"):
+        key = "48f09d63e31b4e7cb6c62e323edab781"
+        endpoint = "https://cse544tkl.cognitiveservices.azure.com/"
+        ta_credential = AzureKeyCredential(key)
+        text_analytics_client = TextAnalyticsClient(
+                endpoint=endpoint, credential=ta_credential)
+        documents = [input_text]
+        response = text_analytics_client.analyze_sentiment(documents = documents)[0]
+        normalized_score = response.confidence_scores.positive + 0.5 * response.confidence_scores.neutral
+        return normalized_score
 
+    elif(classifier_type == "AWS_Comprehend"):
+        comprehend = boto3.client(service_name='comprehend', region_name='us-east-1')
+        sentiment_scores = comprehend.detect_sentiment(Text=input_text, LanguageCode='en')['SentimentScore']
+        normalized_score = sentiment_scores['Positive'] + 0.5 * sentiment_scores['Neutral'] + 0.5 * sentiment_scores['Mixed']
+        return normalized_score
 
-
+    elif(classifier_type == "FB_fastText"):
+        model = fasttext.load_model('models/other/fasttext_model.bin')
+        res = model.predict(input_text)
+        res_list = list(res)
+        if (res_list[0][0] == '__label__0'):
+            score = 1-res_list[1][0]
+        else:
+            score = res_list[1][0]
+        return score
 
 
