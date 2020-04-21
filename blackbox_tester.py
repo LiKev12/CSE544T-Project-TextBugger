@@ -63,6 +63,6 @@ def testBlackBoxSentimentAnalysis(data_type, model_type):
 # testBlackBoxSentimentAnalysis('RT', 'IBM_Watson')
 # testBlackBoxSentimentAnalysis('RT', 'Microsoft_Azure')
 # testBlackBoxSentimentAnalysis('RT', 'AWS_Comprehend')
-testBlackBoxSentimentAnalysis('RT', 'FB_fastText')
+# testBlackBoxSentimentAnalysis('RT', 'FB_fastText')
 
 
