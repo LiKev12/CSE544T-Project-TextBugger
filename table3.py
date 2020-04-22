@@ -92,16 +92,17 @@ def get_original_bb_acc(dataset,classifier_type, num_samples):
 
 
 
+# get_original_bb_acc('IMDB', 'FB_fastText', 100)       # 65.3%
+# get_original_bb_acc('IMDB', 'Google_NLP', 100)        # 66.5%
+# get_original_bb_acc('IMDB', 'IBM_Watson', 100)        # 62.3
+# get_original_bb_acc('IMDB', 'Microsoft_Azure', 100)   # 57.2%
+get_original_bb_acc('IMDB', 'AWS_Comprehend', 100)      # 73.5%
 
 # get_original_bb_acc('RT', 'FB_fastText', 100)       # 72.5%
-# get_original_bb_acc('RT', 'Google_NLP', 100)        # 58.5%
-# get_original_bb_acc('RT', 'IBM_Watson', 100)        # 62%
-# get_original_bb_acc('RT', 'Microsoft_Azure', 100)   # 49%
+# get_original_bb_acc('RT', 'Google_NLP', 100)        # 71.8%
+# get_original_bb_acc('RT', 'IBM_Watson', 100)        # 62.3%
+# get_original_bb_acc('RT', 'Microsoft_Azure', 100)   # 55.2%
 # get_original_bb_acc('RT', 'AWS_Comprehend', 100)    # 69.5%
 
-# get_original_bb_acc('IMDB', 'FB_fastText', 100)       # 55%
-# get_original_bb_acc('IMDB', 'Google_NLP', 100)        # 56.5%
-# get_original_bb_acc('IMDB', 'IBM_Watson', 100)        # 56.5%
-# get_original_bb_acc('IMDB', 'Microsoft_Azure', 100)   # 49%
-get_original_bb_acc('IMDB', 'AWS_Comprehend', 100)    # 69.5%
+
 

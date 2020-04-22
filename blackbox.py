@@ -40,14 +40,14 @@ class BlackBox():
                 prediction = np.round(prediction_proba,0)
                 num_perturbed += 1
 
-                print("{} => {}".format(word, bug))
-                print("Score: {}".format(prediction_proba))
+                # print("{} => {}".format(word, bug))
+                # print("Score: {}".format(prediction_proba))
 
                 if getSemanticSimilarity(self.X, x_prime, self.epsilon) <= self.epsilon:
                     return None
                 elif prediction != self.y:
                     return x_prime,float(num_perturbed/num_words_total)
-        print("None found")
+        # print("None found")
         return None
 
 
@@ -91,7 +91,7 @@ class BlackBox():
 
             word_importances[curr_token] = word_importance
         word_importances = {k: v for k, v in sorted(word_importances.items(), key=lambda item: -item[1])}
-        print(word_importances)
+        # print(word_importances)
 
         return word_importances
 
@@ -101,6 +101,7 @@ class BlackBox():
 
     def selectBug(self, original_word, x_prime):
         bugs = generateBugs(original_word, self.glove_vectors)
+        # bugs = generateBugs(original_word, self.glove_vectors, enable_typo = True)
     
         max_score = float('-inf')
         best_bug = original_word

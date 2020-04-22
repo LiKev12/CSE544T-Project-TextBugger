@@ -29,7 +29,7 @@ class WhiteBox():
         num_perturbed = 0
 
 
-        print("Original (Score: {}): \n{}".format(self.y, x_prime))
+        # print("Original (Score: {}): \n{}".format(self.y, x_prime))
         for x_i in W_ordered:
             bug = self.selectBug(x_i, x_prime)
             x_prime = self.replaceWithBestBug(x_prime, x_i, bug)
@@ -37,20 +37,21 @@ class WhiteBox():
             prediction = np.round(prediction_proba,0)
             num_perturbed += 1
 
-            print("{} => {}".format(x_i, bug))
+            # print("{} => {}".format(x_i, bug))
             # print(x_prime)
-            print("Score: {}".format(prediction_proba))
+            # print("Score: {}".format(prediction_proba))
 
 
             if getSemanticSimilarity(self.X, x_prime, self.epsilon) <= self.epsilon:
                 return None
             elif prediction != self.y:
                 return x_prime,float(num_perturbed/num_words_total)
-        print("None found")
+        # print("None found")
         return None
 
     def selectBug(self, original_word, x_prime):
-        bugs = generateBugs(original_word, self.glove_vectors)
+        bugs = generateBugs(original_word, self.glove_vectors, typo_enabled = True)
+        # bugs = generateBugs(original_word, self.glove_vectors)
         
         max_score = float('-inf')
         best_bug = original_word

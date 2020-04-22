@@ -9,6 +9,8 @@ import pandas as pd
 import random
 from scipy import spatial
 import json
+from spellchecker import SpellChecker
+
 
 # from google.cloud import language
 # from google.cloud.language import enums
@@ -60,6 +62,8 @@ def chunk_input(doc, dataset):
         max_len = 20
     elif (dataset == 'IMDB' or dataset == 'Kaggle'):
         max_len = 200
+    elif (dataset == 'Kaggle'):
+        max_len = 40
 
     if (doc_size > max_len):
         res = doc[0:max_len]
@@ -179,7 +183,7 @@ def getImportances(JM):
 
 ## BUG GENERATION  -------------------------------------------------------------
 
-def generateBugs(word, glove_vectors):
+def generateBugs(word, glove_vectors, sub_w_enabled=False, typo_enabled=False):
     
     bugs = {"insert": word, "delete": word, "swap": word, "sub_C": word, "sub_W": word}
 
@@ -190,9 +194,12 @@ def generateBugs(word, glove_vectors):
     bugs["delete"] = bug_delete(word)
     bugs["swap"] = bug_swap(word)
     bugs["sub_C"] = bug_sub_C(word)
-    bugs["sub_W"] = bug_sub_W(word, glove_vectors)
+    if (typo_enabled):
+        bugs["typoW"] = bug_typo(bugs['swap'])
 
-    # pprint.pprint(bugs)
+    if (not sub_w_enabled):
+        return bugs
+    bugs["sub_W"] = bug_sub_W(word, glove_vectors)
 
     return bugs
 
@@ -257,6 +264,11 @@ def bug_sub_W(word, glove_vectors):
     # return closest_neighbors # Change later
 
 
+def bug_typo(word):
+    spell = SpellChecker(distance = 10)
+    candidates = spell.candidates(word)
+    chosen_candidate_typo = random.choice(list(candidates))
+    return chosen_candidate_typo
 
 def get_key_neighbors():
     # By keyboard proximity
@@ -297,58 +309,5 @@ def find_closest_words(point, glove_vectors):
 
 
 def get_blackbox_classifier_score(classifier_type, input_text):
-    if (classifier_type == "Google_NLP"):
-        ## Returns [-1,1]
-        client = language.LanguageServiceClient()
-        document = types.Document(
-            content=input_text,
-            type=enums.Document.Type.PLAIN_TEXT)
-        sentiment = client.analyze_sentiment(document=document).document_sentiment
-        return (sentiment.score + 1)/2
-
-    elif(classifier_type == "IBM_Watson"):
-        ## Returns [-1,1]
-        input_text = "english language neutral " + input_text   # Requires filler text to know language
-        authenticator = IAMAuthenticator('OhWSxAvGKiqX184B53WztfP0ocegLbrNlsToafXNh80z')
-        service = NaturalLanguageUnderstandingV1(
-            version = '2018-11-16',
-            authenticator=authenticator
-        )
-        service.set_service_url('https://api.us-south.natural-language-understanding.watson.cloud.ibm.com/instances/ba395c41-50f0-4a7a-b6a5-9728116f8b97')
-        response = service.analyze (
-            text = input_text,
-            features = Features(
-                sentiment=SentimentOptions()
-                )
-            ).get_result()
-        res = (response.get('sentiment').get('document').get('score')+1)/2
-        return res
-
-    elif(classifier_type == "Microsoft_Azure"):
-        key = "48f09d63e31b4e7cb6c62e323edab781"
-        endpoint = "https://cse544tkl.cognitiveservices.azure.com/"
-        ta_credential = AzureKeyCredential(key)
-        text_analytics_client = TextAnalyticsClient(
-                endpoint=endpoint, credential=ta_credential)
-        documents = [input_text]
-        response = text_analytics_client.analyze_sentiment(documents = documents)[0]
-        normalized_score = response.confidence_scores.positive + 0.5 * response.confidence_scores.neutral
-        return normalized_score
-
-    elif(classifier_type == "AWS_Comprehend"):
-        comprehend = boto3.client(service_name='comprehend', region_name='us-east-1')
-        sentiment_scores = comprehend.detect_sentiment(Text=input_text, LanguageCode='en')['SentimentScore']
-        normalized_score = sentiment_scores['Positive'] + 0.5 * sentiment_scores['Neutral'] + 0.5 * sentiment_scores['Mixed']
-        return normalized_score
-
-    elif(classifier_type == "FB_fastText"):
-        model = fasttext.load_model('models/other/fasttext_model.bin')
-        res = model.predict(input_text)
-        res_list = list(res)
-        if (res_list[0][0] == '__label__0'):
-            score = 1-res_list[1][0]
-        else:
-            score = res_list[1][0]
-        return score
-
-
+    ## ORIGINALLY CONTAINS ACCOUNT INFORMATION
+    return 0.5

@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import pprint
 import nltk
 import time
+import pandas as pd
 
 # from keras.models import Sequential
 # from keras.layers import Dense, LSTM, Embedding
@@ -1687,4 +1688,241 @@ def strops():
 
 
 
+def get_inverse_OHE(row):
 
+    if row['toxic']==1 or row['severe_toxic']==1 or row['obscene']==1 or row['threat']==1  or row['insult']==1 or row['identity_hate']==1:
+        return 1
+    return 0
+
+
+
+
+def get_train_kaggle():
+    df = pd.read_csv("datasets/Kaggle/raw/train.csv")
+
+    df['score'] = df.apply (lambda row: get_inverse_OHE(row), axis=1)
+    df = df[['comment_text','score']]
+
+    data = {'train':{'pos':[], 'neg':[]}, 'test':{'pos':[], 'neg':[]}}
+    for index, row in df.iterrows():
+        if (row['score'] == 1):
+            data['train']['pos'].append(row['comment_text'])
+        else:
+            data['train']['neg'].append(row['comment_text'])
+
+    pickle.dump(data, open( "datasets/Kaggle/Kaggle_train_tokens.p", "wb" ))
+
+# get_train_kaggle()
+
+def get_test_token_kaggle():
+    df = pd.read_csv("datasets/Kaggle/raw/test.csv")
+    df2 = pd.read_csv('datasets/Kaggle/raw/test_labels.csv')
+
+    df = pd.concat([df, df2], axis=1)
+    df=df.drop(['id'],axis=1)
+    df = df[df.toxic != -1]
+
+    df['score'] = df.apply (lambda row: get_inverse_OHE(row), axis=1)
+    df = df[['comment_text','score']]
+
+    data = pickle.load( open( "datasets/Kaggle/Kaggle_train_tokens.p", "rb" ) )
+    for index, row in df.iterrows():
+        if (row['score'] == 1):
+            data['test']['pos'].append(row['comment_text'])
+        else:
+            data['test']['neg'].append(row['comment_text'])
+
+    pickle.dump(data, open( "datasets/Kaggle/Kaggle_sentences.p", "wb" ))
+
+
+# get_test_token_kaggle()
+
+
+
+
+
+def get_tokens_kaggle():
+    data = pickle.load( open( "datasets/Kaggle/Kaggle_sentences.p", "rb" ) )
+
+    res = {'train':{'pos':[], 'neg':[]}, 'test':{'pos':[], 'neg':[]}}
+
+
+    for key1 in data:
+        for key2 in data[key1]:
+            for sentence in data[key1][key2]:
+                res[key1][key2].append(nltk.word_tokenize(sentence))
+    pickle.dump(res, open( "datasets/Kaggle/Kaggle_tokens.p", "wb" ))
+
+# get_tokens_kaggle()
+
+
+
+
+
+def get_vectors_kaggle():
+
+
+    start = time.time()
+    with open('old/glove_vectors.json') as f:
+        glove_vectors = json.load(f)
+    end = time.time()
+    print("DONE LOADING: {} minutes".format((end-start)/60))
+
+
+
+
+    data = pickle.load( open( "datasets/Kaggle/Kaggle_tokens.p", "rb" ) )
+    res = {'train':{'pos':[], 'neg':[]}, 'test':{'pos':[], 'neg':[]}}
+
+    for key1 in data:
+        for key2 in data[key1]:
+            print("{} | {} | {}".format(key1, key2, len(data[key1][key2])))
+
+    for key1 in data:
+        for key2 in data[key1]:
+            for token_list in data[key1][key2]:
+                vector = transform_to_feature_vector(token_list, glove_vectors)
+                res[key1][key2].append(vector)
+
+    for key1 in res:
+        for key2 in res[key1]:
+            print("{} | {} | {}".format(key1, key2, len(res[key1][key2])))
+
+    pickle.dump(res, open( "datasets/Kaggle/Kaggle_vectors.p", "wb" ))
+
+
+
+# get_vectors_kaggle()
+
+
+
+
+
+def get_embeds_kaggle():
+    data = pickle.load( open( "datasets/Kaggle/Kaggle_tokens.p", "rb" ) )
+
+    words = {}
+    for key1 in data:
+        for key2 in data[key1]:
+            for tokens_list in data[key1][key2]:
+                for word in tokens_list:
+                    words[word] = 0
+
+    for key1 in data:
+        for key2 in data[key1]:
+            for tokens_list in data[key1][key2]:
+                for word in tokens_list:
+                    words[word] += 1
+
+    words = {k: v for k, v in sorted(words.items(), key=lambda item: -item[1])}
+
+    idx = 0
+    for word in words:
+        words[word] = idx
+        idx += 1
+
+    idx2= 0 
+    for word in words:
+        print("{} | {}".format(word, words[word]))
+        idx2 +=1 
+        if idx2 > 10:
+            break
+
+    pickle.dump(words, open( "datasets/Kaggle/Kaggle_embed_map.p", "wb" ))
+
+# get_embeds_kaggle()
+
+
+
+def get_glove_kaggle():
+    start = time.time()
+    # with open('old/glove_vectors.json') as f:
+    with open('old/glove_vectors.json') as f:
+        glove_vectors = json.load(f)
+    end = time.time()
+    print("DONE LOADING: {} minutes".format((end-start)/60))
+
+
+
+    res = {}
+    num_in = 0
+    num_out = 0
+    data = pickle.load( open( "datasets/Kaggle/Kaggle_tokens.p", "rb" ) )
+    for key1 in data:
+        for key2 in data[key1]:
+            for token_list in data[key1][key2]:
+                for word in token_list:
+                    if (word in glove_vectors):
+                        res[word] = glove_vectors[word]
+                        num_in += 1
+                    else:
+                        res[word] = [(random.random()/5)-0.1 for i in range(300)]
+                        num_out += 1
+
+    with open('datasets/Kaggle/glove_kaggle.json', 'w') as outfile:
+        json.dump(res, outfile)
+
+# get_glove_kaggle()
+
+
+def get_len_standard_tcc(review, max_len, embed_map):
+    res = []
+
+    for token in review:
+        res.append(embed_map[token])
+    
+    if (len(res) > max_len):
+        res = res[0:max_len]
+    elif (len(res) < max_len):
+        diff = max_len - len(res)
+        for i in range(0,diff):
+            res.append(random.randint(1,10))
+
+    return res
+
+
+def get_kaggle_embeds_same_len():
+    data = pickle.load( open( "datasets/Kaggle/Kaggle_tokens.p", "rb" ) )
+    embed_map = pickle.load( open( "datasets/Kaggle/Kaggle_embed_map.p", "rb" ) )
+
+    res = {'train':{'pos':[], 'neg':[]}, 'test':{'pos':[], 'neg':[]}}
+
+    for key1 in data:
+        for key2 in data[key1]:
+            for review in data[key1][key2]:
+                embed = get_len_standard_tcc(review, 40, embed_map)
+                res[key1][key2].append(embed)
+
+    for key1 in res:
+        for key2 in res[key1]:
+            print(len(random.choice(res[key1][key2])))
+            break
+        break
+
+    pickle.dump(res, open( "datasets/Kaggle/Kaggle_embeddings.p", "wb" ))
+
+
+
+
+# get_kaggle_embeds_same_len()
+
+
+
+def get_full_embed_map():   
+    word_to_index = pickle.load( open( "datasets/Kaggle/Kaggle_embed_map.p", "rb" ) )
+    index_to_word = {}
+    for k,v in word_to_index.items():
+        index_to_word[v] = k
+    
+    res = {}
+    res['w2i'] = word_to_index
+    res['i2w'] = index_to_word
+
+    pickle.dump(res, open( "datasets/Kaggle/Kaggle_embed_map_full.p", "wb" ))
+
+    print(len(res['w2i']))
+    print(len(res['i2w']))
+
+
+
+get_full_embed_map()
