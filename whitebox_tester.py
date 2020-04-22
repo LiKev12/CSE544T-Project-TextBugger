@@ -17,6 +17,7 @@ def testWhiteBoxSentimentAnalysis(data_type, model_type):
     ## Import glove-vectors once
     glove_vectors = json.load( open( "glove_final.json", "rb") )
     embed_map = pickle.load( open( "datasets/embed_map.p", "rb" ) )
+    embed_map = pickle.load( open( "datasets/embed_map.p", "rb" ) )
 
     ## Get Dataset (2 types: IMDB, RT)
     if (data_type == 'IMDB'):

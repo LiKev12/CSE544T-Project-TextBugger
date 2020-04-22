@@ -1,5 +1,5 @@
 from __future__ import unicode_literals, print_function
-from spacy.lang.en import English # updated
+#from spacy.lang.en import English # updated
 import json
 import pickle
 import numpy as np
@@ -29,6 +29,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
 from nltk.tokenize.treebank import TreebankWordDetokenizer
+from textbugger_utils import *
 
 
 
@@ -181,8 +182,8 @@ def myLSTM():
 
 
 
-
-def get_embed_data(data):
+output_path = "datasets/IMDB_embeddings.p"
+def get_embed_data(dataset,data,output_path):
 
     emb = {}
     emb_map = pickle.load( open( "datasets/embedding_word_to_index.p", "rb" ) )
@@ -191,10 +192,11 @@ def get_embed_data(data):
         for key2 in data[key1]:
             emb[key1][key2] = []
             for document in data[key1][key2]:
+                document = chunk_input(document, dataset)
                 vector = get_single_embed(document, emb_map)
                 emb[key1][key2].append(vector)
     
-    pickle.dump( emb, open( "datasets/IMDB_embeddings.p", "wb" ))
+    pickle.dump( emb, open(output_path, "wb"))
     return emb
 
 def get_single_embed(doc,emb_map):
@@ -354,10 +356,10 @@ def keras_model():
 
 
 
+data_path = "datasets/IMDB_text_tokenized_lower.p"
+def get_embedding(data_path):
 
-def get_embedding():
-
-    data = pickle.load( open( "datasets/IMDB_text_tokenized_lower.p", "rb" ) )
+    data = pickle.load(open(data_path, "rb"))
 
 
     emb = {}
@@ -387,6 +389,8 @@ def get_embedding():
     rev = {v:k for k,v in emb_sorted.items()}
 
     pickle.dump(rev, open("datasets/embedding_index_to_word.p","wb"))
+
+    return emb_sorted.keys()
 
 
 
@@ -1150,9 +1154,12 @@ def generate_new_embeddings(dataset,max_len):
 
 
 def get_cnn(dataset, epochs):
-    data = pickle.load( open( "datasets/{}/{}_embeddings.p".format(dataset, dataset), "rb" ) )
-    emb_map = pickle.load( open( "datasets/embed_map.p", "rb" ) )
-    vocab_size = len(list(emb_map['w2i'].keys()))
+    #data = pickle.load( open( "datasets/{}/{}_embeddings.p".format(dataset, dataset), "rb" ) )
+    #emb_map = pickle.load( open( "datasets/embed_map.p", "rb" ) )
+    data = pickle.load(open("datasets/{}/{}_idx_embeddings.p".format(dataset, dataset), "rb"))
+    emb_map = pickle.load(open("datasets/{}/embedding_word_to_index.p".format(dataset), "rb"))
+    #vocab_size = len(list(emb_map['w2i'].keys()))
+    vocab_size = len(list(emb_map.keys()))
     print('Vocab size is {}'.format(vocab_size))
 
     ## Train
@@ -1163,8 +1170,21 @@ def get_cnn(dataset, epochs):
     x_train.extend(x_train_neg)
     y_train = [1 for i in range(len(x_train_pos))]
     y_train.extend([0 for i in range(len(x_train_neg))])
+    x_train, y_train = shuffle(x_train, y_train)
     x_train = np.array(x_train, dtype='float')
     y_train = np.array(y_train, dtype='float')
+
+    ## Val
+    x_val_pos = data['val']['pos']
+    x_val_neg = data['val']['neg']
+    x_val = []
+    x_val.extend(x_val_pos)
+    x_val.extend(x_val_neg)
+    y_val = [1 for i in range(len(x_val_pos))]
+    y_val.extend([0 for i in range(len(x_val_neg))])
+    x_val, y_val = shuffle(x_val, y_val)
+    x_val = np.array(x_val, dtype='float')
+    y_val = np.array(y_val, dtype='float')
 
     ## Test
     x_test_pos = data['test']['pos']
@@ -1174,6 +1194,7 @@ def get_cnn(dataset, epochs):
     x_test.extend(x_test_neg)
     y_test = [1 for i in range(len(x_test_pos))]
     y_test.extend([0 for i in range(len(x_test_neg))])
+    x_test, y_test = shuffle(x_test, y_test)
     x_test = np.array(x_test, dtype='float')
     y_test = np.array(y_test, dtype='float')
 
