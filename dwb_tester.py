@@ -50,12 +50,19 @@ def dwb_blackbox_SA(dataset, classifier_type, num_samples):
     
 
 
-dwb_blackbox_SA('RT','FB_fastText', 100)        # 38.5% # 3.730 min
-dwb_blackbox_SA('RT', 'Google_NLP', 100)        # 26.5% # 1.993 min
-dwb_blackbox_SA('RT', 'IBM_Watson', 100)        # 26.0% # 3.069 min
-dwb_blackbox_SA('RT', 'Microsoft_Azure', 100)   # 38.5% # 1.739 min
-dwb_blackbox_SA('RT', 'AWS_Comprehend', 100)    # 31.0% # 0.976 min
+# dwb_blackbox_SA('RT','FB_fastText', 100)        # 38.5% # 3.730 min
+# dwb_blackbox_SA('RT', 'Google_NLP', 100)        # 26.5% # 1.993 min
+# dwb_blackbox_SA('RT', 'IBM_Watson', 100)        # 26.0% # 3.069 min
+# dwb_blackbox_SA('RT', 'Microsoft_Azure', 100)   # 38.5% # 1.739 min
+# dwb_blackbox_SA('RT', 'AWS_Comprehend', 100)    # 31.0% # 0.976 min
 
+
+
+# dwb_blackbox_SA('IMDB','FB_fastText', 50)        # 29.3% # 1.94 min
+# dwb_blackbox_SA('IMDB', 'Google_NLP', 50)        # 23.2% # 1.45 min
+# dwb_blackbox_SA('IMDB', 'IBM_Watson', 50)        # 20% # 1.61 min
+# dwb_blackbox_SA('IMDB', 'Microsoft_Azure', 50)   # 24% # 0.79 min
+# dwb_blackbox_SA('IMDB', 'AWS_Comprehend', 50)    # 18% # 0.584 min
 
 
 
