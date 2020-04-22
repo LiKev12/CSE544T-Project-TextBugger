@@ -5,25 +5,25 @@ import os
 import time
 import pprint
 import pandas as pd
-import keras
+# import keras
 import random
 from scipy import spatial
 import json
 
-from google.cloud import language
-from google.cloud.language import enums
-from google.cloud.language import types
-
-from ibm_watson import NaturalLanguageUnderstandingV1
-from ibm_watson.natural_language_understanding_v1 import Features, EntitiesOptions, KeywordsOptions, SentimentOptions, CategoriesOptions
-from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
-
-from azure.ai.textanalytics import TextAnalyticsClient
-from azure.core.credentials import AzureKeyCredential
-
-import boto3
-
-import fasttext
+# from google.cloud import language
+# from google.cloud.language import enums
+# from google.cloud.language import types
+#
+# from ibm_watson import NaturalLanguageUnderstandingV1
+# from ibm_watson.natural_language_understanding_v1 import Features, EntitiesOptions, KeywordsOptions, SentimentOptions, CategoriesOptions
+# from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+#
+# from azure.ai.textanalytics import TextAnalyticsClient
+# from azure.core.credentials import AzureKeyCredential
+#
+# import boto3
+#
+# import fasttext
 
 
 def get_prediction_given_tokens(model_type, model, doc, glove_vectors = None, embed_map = None, dataset = None):
@@ -58,7 +58,7 @@ def chunk_input(doc, dataset):
 
     if (dataset == 'RT'):
         max_len = 20
-    elif (dataset == 'IMDB'):
+    elif (dataset == 'IMDB' or dataset == 'Kaggle'):
         max_len = 200
 
     if (doc_size > max_len):
@@ -91,6 +91,32 @@ def transform_to_feature_vector(tokens, glove_vectors):
 
     means = np.mean(vectors, axis=0)
     return [means] # [ [x11,x12,x13,...]  ]
+
+def transform_to_word_feature_vector(tokens, glove_vectors, max_len):
+    #print("333333")
+    print(max_len)
+    # same length
+    doc_size = len(tokens)
+    if (doc_size > max_len):
+        tokens = tokens[0:max_len]
+    elif (doc_size < max_len):
+        diff = max_len - doc_size
+        for i in range(0, diff):
+            tokens.append('<pad>')
+    #print("3333-111111")
+
+    vectors = []
+    for token in tokens:
+        if token in glove_vectors:
+            vect = glove_vectors[token]
+            vectors.append(vect)
+            #print("3333-22222")
+        else:
+            # sampling from the uniform distribution in [-0.1, 0.1]
+            vect = [(random.random() / 5) - 0.1 for i in range(300)]
+            vectors.append(vect)
+            #print("3333-33333")
+    return vectors
 
 
 ## SEMANTIC SIMILARITY  -------------------------------------------------------------
